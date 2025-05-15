@@ -1,25 +1,28 @@
 
-
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Mecanismo {
 
     private BufferedReader reader;
-    private ArrayList<String> bufferPrimario;
-    private ArrayList<String> bufferSecundario;
-    private String capture;
+    private ArrayList<String> arq;
+    private int chave;
 
-    private final String captureComment = "\\/\\/.*|\\(\\*(?:.|\\s)*\\*\\)";
-    private final String captureNumbers = "(?<!\\w)(?:-?\\d+(?:\\.\\d+)?)(?!\\w)";
-    private final String captureLiteral = "'(?:[^']|'')*'";
-    private final String captureWords = "\\w+";
-    private final String captureCharacters = "(?::=|>=|<=|<>|>|<|=|\\+|\\-|\\*|\\/|[:;,.()\\[\\]{}])";
-    private final String captureIdentifier = "^[A-Za-z][A-Za-z0-9_]*$";
+    public void executarCripto(String arquivoTexto, String arquivoCripto) {
+        LerArquivo(arquivoTexto);
+        criptografarArquivo(arquivoTexto, arquivoCripto);
+
+    }
+
+    public void executarDecripto(String entradaCripto, String saidaDecripto) {
+        LerArquivo(entradaCripto);
+        descriptografarArquivo(entradaCripto, saidaDecripto);
+
+    }
 
     public void LerArquivo(String caminhoArquivo) {
         System.out.println("----------------------------------------");
@@ -34,14 +37,15 @@ public class Mecanismo {
         } catch (IOException e) {
             System.out.println("Erro ao ler o arquivo: " + e.getMessage());
         }
+        ProcessarBufferPrimario();
     }
 
     public void ProcessarBufferPrimario() {
-        this.bufferPrimario = new ArrayList<>();
+        this.arq = new ArrayList<>();
         try {
             String linha;
             while ((linha = this.reader.readLine()) != null) {
-                bufferPrimario.add(linha);
+                arq.add(linha);
             }
         } catch (IOException e) {
             System.out.println("Erro ao ler o arquivo: " + e.getMessage());
@@ -54,46 +58,80 @@ public class Mecanismo {
                 }
             }
         }
+        ImprimirArquivo();
     }
 
-    public void ImprimirBufferPrimario() {
+    public void ImprimirArquivo() {
         System.out.println("----------------------------------------");
-        System.out.println("##### Conteúdo do Buffer primário: #####");
-        for (String texto : this.bufferPrimario) {
+        System.out.println("##### Conteúdo do Arquivo: #####");
+        for (String texto : this.arq) {
             System.out.println(texto);
         }
         System.out.println("----------------------------------------");
     }
 
-    public void ProcessarBufferSecundario() {
-        this.capture = captureComment.concat("|")
-                .concat(captureNumbers).concat("|")
-                .concat(captureLiteral).concat("|")
-                .concat(captureWords).concat("|")
-                .concat(captureCharacters);
-
-        this.bufferSecundario = new ArrayList<>();
-
-        Pattern pattern = Pattern.compile(this.capture);
-
-        for (String texto : bufferPrimario) {
-            Matcher matcher = pattern.matcher(texto);
-            while (matcher.find()) {
-                String lexema = matcher.group();
-                if (this.bufferSecundario.contains(lexema) == false) {
-                    this.bufferSecundario.add(lexema);
-                }
+    public void EscreverArquivo(String caminhoArquivo, ArrayList<String> conteudo) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(caminhoArquivo))) {
+            for (String linha : conteudo) {
+                writer.write(linha);
+                writer.newLine();
             }
+            System.out.println("Arquivo salvo com sucesso: " + caminhoArquivo);
+        } catch (IOException e) {
+            System.out.println("Erro ao escrever no arquivo: " + e.getMessage());
         }
-        bufferSecundario.removeIf(value -> value.startsWith("//") || value.startsWith("(*"));
     }
 
-    public void ImprimirBufferSecundario() {
-        System.out.println("----------------------------------------");
-        System.out.println("##### Conteúdo do Buffer secundário: #####");
-        for (String texto : this.bufferSecundario) {
-            System.out.println(texto);
+    public void criptografarArquivo(String arquivoEntrada, String arquivoSaida) {
+
+        chave = Integer
+                .parseInt(System.console().readLine("Digite a chave de criptografia (número de posições): "));
+        CifraCesar cifra = new CifraCesar(chave);
+
+        try (BufferedReader leitor = new BufferedReader(new FileReader(arquivoEntrada))) {
+            StringBuilder texto = new StringBuilder();
+            int caractere;
+
+            while ((caractere = leitor.read()) != -1) {
+                texto.append((char) caractere);
+            }
+
+            String textoCriptografado = cifra.criptografar(texto.toString());
+
+            try (BufferedWriter escritor = new BufferedWriter(new FileWriter(arquivoSaida))) {
+                escritor.write(textoCriptografado);
+            }
+
+            System.out.println("Arquivo criptografado com sucesso: " + arquivoSaida);
+
+        } catch (IOException e) {
+            System.out.println("Erro ao processar o arquivo: " + e.getMessage());
         }
-        System.out.println("----------------------------------------");
     }
+
+    public void descriptografarArquivo(String arquivoEntrada, String arquivoSaida) {
+
+        CifraCesar cifra = new CifraCesar(-chave);
+
+        try (BufferedReader leitor = new BufferedReader(new FileReader(arquivoEntrada))) {
+            StringBuilder texto = new StringBuilder();
+            int caractere;
+
+            while ((caractere = leitor.read()) != -1) {
+                texto.append((char) caractere);
+            }
+
+            String textoCriptografado = cifra.criptografar(texto.toString());
+
+            try (BufferedWriter escritor = new BufferedWriter(new FileWriter(arquivoSaida))) {
+                escritor.write(textoCriptografado);
+            }
+
+            System.out.println("Arquivo criptografado com sucesso: " + arquivoSaida);
+
+        } catch (IOException e) {
+            System.out.println("Erro ao processar o arquivo: " + e.getMessage());
+        }
+    }
+
 }

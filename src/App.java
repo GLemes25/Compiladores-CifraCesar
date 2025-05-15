@@ -1,27 +1,15 @@
-import Mecanismo.Executor;
 
 public class App {
     public static void main(String[] args) {
-        Executor exec = new Executor();
+
         Mecanismo mec = new Mecanismo();
 
-        exec.LerArquivo("src/Arquivos/entrada.txt");
-        exec.ProcessarBufferPrimario();
-        exec.ImprimirBufferPrimario();
-        exec.ProcessarBufferSecundario();
-        exec.ImprimirBufferSecundario();
-        // exec.AnalisarMontandoTabelaSimbolos();
-        // exec.ImprimirTabelaSimbolosPrograma();
+        String entradaTexto = "src/texto/entradaTexto.txt";
+        String saidaCripto = "src/texto/saidaCripto.txt";
+        mec.executarCripto(entradaTexto, saidaCripto);
+
+        String saidaDecripto = "src/texto/saidaDecripto.txt";
+        mec.executarDecripto(saidaCripto, saidaDecripto);
+
     }
 }
-
-public class App {
-    public static void main(String[] args) {
-    Mecanismo mec = new Mecanismo();
-    String entradaTexto = "src/texto/entradaTexto.txt";
-    String saidaCripto = "src/texto/saidaCripto.txt";
-    mec.executarCripto(entradaTexto, saidaCripto);
-    String saidaDecripto = "src/texto/saidaDecripto.txt";
-    mec.executarDecripto(saidaCripto, saidaDecripto);
-    }
-    }
